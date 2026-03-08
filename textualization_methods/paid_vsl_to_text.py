@@ -1,5 +1,7 @@
 """
-This file uses Gemini model to textualize pictures.
+This file is intended to use such paid models as Gemini, Claude, or GPT to textualize pictures. 
+The main difference from free models is taht here we do not have a limit of prompts per day 
+so retries are not included in this code.
 """
 import os
 import io
