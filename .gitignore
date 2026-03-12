@@ -1,6 +1,8 @@
 credentials.json
 .env
 
+output_texts/
+__pycache__/
 venv/
 .venv/
 

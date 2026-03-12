@@ -142,14 +142,14 @@ def run_textualization_pipeline():
                 result_text = response.choices[0].message.content
                 full_markdown += f"## Сторінка {page_index + 1}\n\n{result_text}\n\n---\n\n"
             os.makedirs("output_texts", exist_ok=True)
-            with open(f"output_texts/{file_name}.md", "w", encoding="utf-8") as f:
+            with open(f"output_texts/{file_name[:-4]}.md", "w", encoding="utf-8") as f:
                 f.write(full_markdown)        
-            save_to_postgres(file_id, file_name, full_markdown)         
+            save_to_postgres(file_id, file_name, full_markdown)
             df.at[index, 'status'] = 'Success'
             print(f"File {file_name} textualized")
 
         except Exception as e:
-            print(f"Помилка: {e}")
+            print(f"ERROR: {e}")
             df.at[index, 'status'] = 'Error'
 
     sheet.clear()
