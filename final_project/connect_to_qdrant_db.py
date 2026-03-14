@@ -1,3 +1,6 @@
+"""
+In this file we retrieve texts from PostgreSQL and uload vectorized data into Qdrant.
+"""
 import uuid
 import pandas as pd
 import psycopg2
@@ -13,6 +16,9 @@ COLLECTION_NAME = "ucu_documents"
 model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 
 def get_text_from_postgres(file_id):
+    """
+    Get textualized file from PostreSQL by file ID.
+    """
     try:
         conn = psycopg2.connect(
             dbname="ucu_rag_db", user="user", password="password", host="127.0.0.1"
@@ -38,7 +44,6 @@ def sync_vectors_with_sheets():
     client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
     sheets_client = get_sheets_client()
     sheet = sheets_client.open_by_key(SHEET_ID).sheet1
-    
     df = pd.DataFrame(sheet.get_all_records())
 
     if not client.collection_exists(COLLECTION_NAME):
