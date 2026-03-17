@@ -1,9 +1,8 @@
 credentials.json
 .env
-
 output_texts/
+.deepeval/
 __pycache__/
 venv/
 .venv/
-
 __pycache__/
