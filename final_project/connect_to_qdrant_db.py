@@ -11,9 +11,9 @@ from connect_to_google_drive import get_sheets_client, SHEET_ID
 
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
-COLLECTION_NAME = "ucu_documents"
+COLLECTION_NAME = "ucu_documents_e5_large"
 
-model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+model = SentenceTransformer('intfloat/multilingual-e5-large')
 
 def get_text_from_postgres(file_id):
     """
@@ -81,7 +81,7 @@ def sync_vectors_with_sheets():
             print(f"File {file_name} in progress")
             
             for i, chunk in enumerate(chunks):
-                vector = model.encode(chunk).tolist()
+                vector = model.encode("passage: " + chunk).tolist()
                 point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_{i}"))
                 client.upsert(
                     collection_name=COLLECTION_NAME,
