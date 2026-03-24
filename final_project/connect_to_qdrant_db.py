@@ -1,5 +1,5 @@
 """
-In this file we retrieve texts from PostgreSQL and uload vectorized data into Qdrant.
+In this file we retrieve texts from PostgreSQL and upload vectorized data into Qdrant.
 """
 import uuid
 import pandas as pd
