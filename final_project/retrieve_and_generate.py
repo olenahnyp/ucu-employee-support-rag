@@ -16,8 +16,8 @@ QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
 client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
-MODEL = SentenceTransformer('intfloat/multilingual-e5-base')
-COLLECTION_NAME = "ucu_documents_e5_base"
+MODEL = SentenceTransformer('intfloat/multilingual-e5-large')
+COLLECTION_NAME = "ucu_documents_e5_large"
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 

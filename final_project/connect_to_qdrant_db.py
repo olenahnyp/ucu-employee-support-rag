@@ -49,7 +49,7 @@ def sync_vectors_with_sheets():
     if not client.collection_exists(COLLECTION_NAME):
         client.create_collection(
             collection_name=COLLECTION_NAME,
-            vectors_config=models.VectorParams(size=384, distance=models.Distance.COSINE)
+            vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
         )
 
     deleted_files = df[df['status'] == 'Deleted']
@@ -88,7 +88,7 @@ def sync_vectors_with_sheets():
                     points=[
                         models.PointStruct(
                             id=point_id,
-                            vector=vector,
+                            vector={"default": vector},
                             payload={
                                 "file_id": file_id,
                                 "file_name": file_name,

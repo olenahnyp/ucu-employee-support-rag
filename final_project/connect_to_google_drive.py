@@ -73,7 +73,7 @@ def sync_files():
         drive_ids = {f['id']: f for f in drive_files}
 
         all_records = sheet.get_all_records()
-        expected_cols = ['file_name', 'google_drive_id', 'last_modified_drive', 'status', 'vector_db_sync']
+        expected_cols = ['file_name', 'google_drive_id', 'last_modified_drive', 'status', 'vector_db_sync', 'access']
 
         if all_records:
             df = pd.DataFrame(all_records)
