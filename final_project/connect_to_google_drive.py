@@ -35,7 +35,7 @@ def get_sheets_client():
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     return gspread.authorize(creds)
 
-def get_all_files_in_folder(service, folder_id):
+def get_all_files_in_folder(service, folder_id, current_path=""):
     """
     This function recursively looks for all the files in drive.
     """
@@ -52,9 +52,11 @@ def get_all_files_in_folder(service, folder_id):
     items = results.get('files', [])
 
     for item in items:
+        item_path = f"{current_path}/{item['name']}".strip("/")
         if item['mimeType'] == 'application/vnd.google-apps.folder':
-            all_files.extend(get_all_files_in_folder(service, item['id']))
+            all_files.extend(get_all_files_in_folder(service, item['id'], item_path))
         else:
+            item['full_path'] = item_path
             all_files.append(item)
        
     return all_files
@@ -95,6 +97,9 @@ def sync_files():
 
         for f_id, f_data in drive_ids.items():
             mask = df['google_drive_id'] == f_id
+            full_path = f_data.get('full_path', '')
+            path_parts = full_path.split('/')
+            access_type = path_parts[0]
   
             if not mask.any():
                 new_row = {
@@ -102,7 +107,8 @@ def sync_files():
                     'google_drive_id': f_id,
                     'last_modified_drive': f_data['modifiedTime'],
                     'status': 'Pending',
-                    'vector_db_sync': 'No'
+                    'vector_db_sync': 'No',
+                    'access': access_type
                 }
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)   
 

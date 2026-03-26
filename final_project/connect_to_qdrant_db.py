@@ -72,6 +72,7 @@ def sync_vectors_with_sheets():
     for index, row in to_sync.iterrows():
         file_id = row['google_drive_id']
         file_name = row['file_name']
+        access_type = row['access']
         
         text = get_text_from_postgres(file_id)
 
@@ -93,7 +94,8 @@ def sync_vectors_with_sheets():
                                 "file_id": file_id,
                                 "file_name": file_name,
                                 "text": chunk,
-                                "chunk_index": i
+                                "chunk_index": i,
+                                "access": access_type
                             }
                         )
                     ]
