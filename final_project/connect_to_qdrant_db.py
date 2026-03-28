@@ -6,14 +6,17 @@ import pandas as pd
 import psycopg2
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
+from qdrant_client.models import Distance, VectorParams, SparseVectorParams
 from sentence_transformers import SentenceTransformer
 from connect_to_google_drive import get_sheets_client, SHEET_ID
+from fastembed import SparseTextEmbedding
 
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
-COLLECTION_NAME = "ucu_documents_e5_large"
+COLLECTION_NAME = "ucu_documents_e5_base"
 
-model = SentenceTransformer('intfloat/multilingual-e5-large')
+model = SentenceTransformer('intfloat/multilingual-e5-base')
+MODEL_SPARSE = SparseTextEmbedding(model_name="Qdrant/bm25")
 
 def get_text_from_postgres(file_id):
     """
@@ -49,7 +52,19 @@ def sync_vectors_with_sheets():
     if not client.collection_exists(COLLECTION_NAME):
         client.create_collection(
             collection_name=COLLECTION_NAME,
-            vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
+            vectors_config={
+                "default": VectorParams(
+                    size=768,
+                    distance=Distance.COSINE
+                )
+            },
+            sparse_vectors_config={
+                "text_sparse": SparseVectorParams(
+                    index=models.SparseIndexParams(
+                        on_disk=False,
+                    )
+                )
+            }
         )
 
     deleted_files = df[df['status'] == 'Deleted']
@@ -82,14 +97,20 @@ def sync_vectors_with_sheets():
             print(f"File {file_name} in progress")
             
             for i, chunk in enumerate(chunks):
-                vector = model.encode("passage: " + chunk).tolist()
+                dense_vector = model.encode("passage: " + chunk).tolist()
+                vectors_to_upload = {"default": dense_vector}
+                sparse_emb = list(MODEL_SPARSE.embed([chunk]))[0]
+                vectors_to_upload["text_sparse"] = models.SparseVector(
+                    indices=sparse_emb.indices.tolist(),
+                    values=sparse_emb.values.tolist()
+                )
                 point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_{i}"))
                 client.upsert(
                     collection_name=COLLECTION_NAME,
                     points=[
                         models.PointStruct(
                             id=point_id,
-                            vector={"default": vector},
+                            vector=vectors_to_upload,
                             payload={
                                 "file_id": file_id,
                                 "file_name": file_name,

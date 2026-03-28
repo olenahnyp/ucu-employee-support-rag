@@ -6,18 +6,21 @@ to generate final answer.
 import os
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from qdrant_client import QdrantClient, models
+from qdrant_client.models import SparseTextEmbedding
 from openai import OpenAI
 from dotenv import load_dotenv
-from guardrails import is_out_of_scope, is_toxic
+from final_project.guardrails import is_out_of_scope, is_toxic
+from fastembed import SparseTextEmbedding
 
 load_dotenv()
 
-QDRANT_HOST = "localhost"
+QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
 QDRANT_PORT = 6333
 client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
-MODEL = SentenceTransformer('intfloat/multilingual-e5-large')
-COLLECTION_NAME = "ucu_documents_e5_large"
+MODEL = SentenceTransformer('intfloat/multilingual-e5-base')
+MODEL_SPARSE = SparseTextEmbedding(model_name="Qdrant/bm25")
+COLLECTION_NAME = "ucu_documents_e5_base"
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -30,7 +33,7 @@ GEMINI_ANSWER_MODEL = "google/gemini-3-flash-preview"
 
 RERANKER = CrossEncoder("BAAI/bge-reranker-v2-m3")
 
-def search_with_reranker(query: str, initial_k: int = 10, final_k: int = 3):
+def search_with_reranker(query: str, allowed_categories=None, initial_k: int = 10, final_k: int = 3):
     """
     Here chunks are retrieved from Qdrant and then reranked.
     """
@@ -39,6 +42,18 @@ def search_with_reranker(query: str, initial_k: int = 10, final_k: int = 3):
     original_query_text = query 
     
     query_vector = MODEL.encode("query: " + query)
+    sparse_emb = list(MODEL_SPARSE.embed([query]))[0]
+
+    query_filter = None
+    if allowed_categories:
+        query_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="access",
+                    match=models.MatchAny(any=allowed_categories)
+                )
+            ]
+        )
 
     search_results = client.query_points(
         collection_name=COLLECTION_NAME,
@@ -46,8 +61,17 @@ def search_with_reranker(query: str, initial_k: int = 10, final_k: int = 3):
             models.Prefetch(
                 query=query_vector,
                 using="default",
+                query_filter=query_filter,
                 limit=initial_k
-            )
+            ),
+            models.Prefetch(
+                query=models.SparseVector(
+                indices=sparse_emb.indices.tolist(),
+                values=sparse_emb.values.tolist()),
+                query_filter=query_filter,
+                using="text_sparse",
+                limit=initial_k
+            ),
         ],
         query=models.FusionQuery(fusion=models.Fusion.RRF),
         limit=initial_k
@@ -90,7 +114,7 @@ def generate_final_answer(query: str, retrieved_context: str):
     1. Якщо в контексті немає відповіді, чесно скажи: "На жаль, у знайдених документах немає інформації для відповіді на це запитання." Не вигадуй жодних фактів.
     2. Формулюй відповідь чітко, професійно та структуровано.
     3. Якщо в тебе запитують щось про конкретних людей, то не згадуй їх імена, якщо імен немає джерелі, а тільки ініціали та прізвище.
-    4. Якщо питають якісь статистичні дані і не вказують рік, то бери найактуальніші документи.
+    4. Якщо ставлять питання і не вказують рік, то бери найактуальніші документи за 2025 рік, якщо вони є.
     5. Обов'язково вказуй джерело інформації у форматі: [Джерело: Назва_файлу.pdf].
     """
 
@@ -137,8 +161,13 @@ def generate_answer_with_guardrails(query: str, retrieved_context: str):
         "guardrail_triggered": None
     }
 
-if __name__ == "__main__":
-    query = input("Введіть ваше запитання: ")
+def run_rag_pipeline(query):
     result = search_with_reranker(query)
     answer = generate_answer_with_guardrails(query, result)
-    print(answer["answer"])
+    return f"{answer['answer']}"
+
+# if __name__ == "__main__":
+#     query = input("Введіть ваше запитання: ")
+#     result = search_with_reranker(query)
+#     answer = generate_answer_with_guardrails(query, result)
+#     print(answer["answer"])

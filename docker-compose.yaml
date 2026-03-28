@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: ucu_rag_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+    networks:
+      - rag_network
+
+  postgres:
+    image: postgres:15
+    container_name: ucu_rag_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ucu_rag_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db_init:/docker-entrypoint-initdb.d
+    networks:
+      - rag_network
+
+  streamlit_app:
+    build: .
+    container_name: ucu_rag_streamlit
+    restart: always
+    ports:
+      - "8501:8501"
+    environment:
+      - QDRANT_HOST=qdrant
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=ucu_rag_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    depends_on:
+      - qdrant
+      - postgres
+    networks:
+      - rag_network
+
+volumes:
+  qdrant_data:
+  postgres_data:
+
+networks:
+  rag_network:
+    name: ucu_rag_network
+    driver: bridge

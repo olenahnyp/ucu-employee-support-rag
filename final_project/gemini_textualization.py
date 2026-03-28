@@ -24,27 +24,6 @@ client = OpenAI(
 
 MODEL_NAME = "google/gemini-3-flash-preview"
 
-def init_db():
-    """
-    Initialize PostgreSQL database to store text documents.
-    """
-    conn = psycopg2.connect(
-        dbname="ucu_rag_db", user="user", password="password", host="localhost"
-    )
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS processed_documents (
-            id SERIAL PRIMARY KEY,
-            google_drive_id TEXT UNIQUE,
-            file_name TEXT,
-            markdown_content TEXT,
-            processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
-    conn.commit()
-    cur.close()
-    conn.close()
-
 def save_to_postgres(file_id, file_name, content):
     """
     Save a document to PostgreSQL.
@@ -156,5 +135,4 @@ def run_textualization_pipeline():
     sheet.update([df.columns.values.tolist()] + df.values.tolist())
 
 if __name__ == "__main__":
-    init_db()
     run_textualization_pipeline()
