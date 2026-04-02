@@ -10,6 +10,7 @@ from qdrant_client.models import Distance, VectorParams, SparseVectorParams
 from sentence_transformers import SentenceTransformer
 from connect_to_google_drive import get_sheets_client, SHEET_ID
 from fastembed import SparseTextEmbedding
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
@@ -83,6 +84,12 @@ def sync_vectors_with_sheets():
         df.loc[df['google_drive_id'] == file_id, 'vector_db_sync'] = 'Yes'
 
     to_sync = df[(df['status'] == 'Success') & (df['vector_db_sync'] == 'No')]
+
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=200,
+        separators=["\n\n", "\n", ". ", " ", ""]
+    )
     
     for index, row in to_sync.iterrows():
         file_id = row['google_drive_id']
@@ -92,7 +99,7 @@ def sync_vectors_with_sheets():
         text = get_text_from_postgres(file_id)
 
         if text:
-            chunks = [text[i:i+1000] for i in range(0, len(text), 800)]
+            chunks = text_splitter.split_text(text)
             
             print(f"File {file_name} in progress")
             

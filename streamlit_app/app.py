@@ -1,9 +1,9 @@
 import streamlit as st
 import os
 import sys
-from database import verify_user, get_allowed_categories
+from streamlit_app.services.auth_service import verify_user, get_allowed_categories
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from final_project import retrieve_and_generate
+from streamlit_app.services import rag_service
 
 st.set_page_config(page_title="UCU Employee Support", page_icon="🎓")
 
@@ -54,7 +54,7 @@ else:
             with st.spinner("Шукаю інформацію в документах УКУ..."):
                 try:
                     allowed = get_allowed_categories(st.session_state["role"])
-                    response = retrieve_and_generate.run_rag_pipeline(prompt, allowed_categories=allowed)
+                    response = rag_service.run_rag_pipeline(prompt, allowed_categories=allowed)
                     
                     st.markdown(response)
                     st.session_state.messages.append({"role": "assistant", "content": response})
