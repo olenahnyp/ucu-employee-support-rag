@@ -44,7 +44,10 @@ def search_with_reranker(query: str, allowed_categories=None, initial_k: int = 1
     query_vector = MODEL.encode("query: " + query)
     sparse_emb = list(MODEL_SPARSE.embed([query]))[0]
 
-    query_filter = None
+    query_filter = models.Filter(
+        must_not=[models.HasIdCondition(has_id=[])]
+    )
+    print(allowed_categories)
     if allowed_categories:
         query_filter = models.Filter(
             must=[
@@ -54,6 +57,8 @@ def search_with_reranker(query: str, allowed_categories=None, initial_k: int = 1
                 )
             ]
         )
+    else:
+        return "У вас немає доступу до жодних документів."
 
     search_results = client.query_points(
         collection_name=COLLECTION_NAME,
@@ -61,14 +66,14 @@ def search_with_reranker(query: str, allowed_categories=None, initial_k: int = 1
             models.Prefetch(
                 query=query_vector,
                 using="default",
-                query_filter=query_filter,
+                filter=query_filter,
                 limit=initial_k
             ),
             models.Prefetch(
                 query=models.SparseVector(
                 indices=sparse_emb.indices.tolist(),
                 values=sparse_emb.values.tolist()),
-                query_filter=query_filter,
+                filter=query_filter,
                 using="text_sparse",
                 limit=initial_k
             ),
@@ -161,8 +166,8 @@ def generate_answer_with_guardrails(query: str, retrieved_context: str):
         "guardrail_triggered": None
     }
 
-def run_rag_pipeline(query):
-    result = search_with_reranker(query)
+def run_rag_pipeline(query, allowed_categories):
+    result = search_with_reranker(query, allowed_categories)
     answer = generate_answer_with_guardrails(query, result)
     return f"{answer['answer']}"
 

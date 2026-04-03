@@ -4,6 +4,7 @@ openai
 python-dotenv
 streamlit
 streamlit-authenticator
+streamlit_option_menu
 pandas
 torch --index-url https://download.pytorch.org/whl/cpu
 torchvision --index-url https://download.pytorch.org/whl/cpu
