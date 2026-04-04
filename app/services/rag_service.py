@@ -9,7 +9,7 @@ from qdrant_client import QdrantClient, models
 from qdrant_client.models import SparseTextEmbedding
 from openai import OpenAI
 from dotenv import load_dotenv
-from streamlit_app.services.guardrails import is_out_of_scope, is_toxic
+from app.services.guardrails import is_out_of_scope, is_toxic
 from fastembed import SparseTextEmbedding
 
 load_dotenv()

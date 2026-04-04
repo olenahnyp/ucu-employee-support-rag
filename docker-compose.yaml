@@ -29,12 +29,12 @@ services:
     networks:
       - rag_network
 
-  streamlit_app:
+  fastapi_backend:
     build: .
-    container_name: ucu_rag_streamlit
-    restart: always
+    container_name: ucu_rag_backend
+    command: uvicorn app.backend:app --host 0.0.0.0 --port 8000 --reload
     ports:
-      - "8501:8501"
+      - "8000:8000"
     environment:
       - QDRANT_HOST=qdrant
       - POSTGRES_HOST=postgres
@@ -45,6 +45,20 @@ services:
     depends_on:
       - qdrant
       - postgres
+    networks:
+      - rag_network
+
+  streamlit_app:
+    build: .
+    container_name: ucu_rag_streamlit
+    command: streamlit run app/frontend.py --server.port=8501 --server.address=0.0.0.0
+    restart: always
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://fastapi_backend:8000
+    depends_on:
+      - fastapi_backend
     networks:
       - rag_network
 

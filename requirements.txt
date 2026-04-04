@@ -17,3 +17,7 @@ fastembed>=0.2.0
 werkzeug
 psycopg2-binary
 langchain_text_splitters
+fastapi
+uvicorn[standard]
+requests
+pydantic
