@@ -64,7 +64,8 @@ def add_new_role_api(new_role, category, admin_role):
         response = requests.post(f"{BACKEND_URL}/admin/add-role", params=params) 
         if response.status_code == 200:
             return True, response.json().get("message", "Роль додана")
-        return False, response.json().get("detail", "Помилка сервера")
+        error_detail = response.json().get("detail", "Помилка сервера")
+        return False, error_detail
     except Exception as e:
         return False, f"Помилка мережі: {str(e)}"
 

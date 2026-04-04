@@ -66,6 +66,8 @@ async def add_role(role: str, category: str, current_user_role: str = Query(...)
     try:
         iam_service.add_new_role(role, category)
         return {"status": "success", "message": f"Роль {role} для категорії {category} додана"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 

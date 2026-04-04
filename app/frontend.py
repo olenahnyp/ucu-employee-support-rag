@@ -100,6 +100,8 @@ else:
                             st.rerun()
                         else:
                             st.error(f"Не вдалося додати: {message}")
+                            time.sleep(3)
+                            st.rerun()
                     else:
                         st.warning("Будь ласка, заповніть обидва поля.")
             with col2:

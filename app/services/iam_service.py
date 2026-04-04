@@ -76,6 +76,14 @@ def get_all_users():
 def add_new_role(role, category):
     conn = get_connection()
     cur = conn.cursor()
+    cur.execute("SELECT 1 FROM access_control WHERE role = %s AND allowed_category = %s", (role, category))
+    role_and_category_exist = cur.fetchone()
+    cur.close()
+    conn.close()
+    if role_and_category_exist:
+        raise ValueError(f"Зв'язок ролі '{role}' з категорією '{category}' вже існує")
+    conn = get_connection()
+    cur = conn.cursor()
     cur.execute(
         "INSERT INTO access_control (role, allowed_category) VALUES (%s, %s)",
         (role, category)
