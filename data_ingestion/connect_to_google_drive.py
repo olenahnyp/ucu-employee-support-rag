@@ -130,6 +130,3 @@ def sync_files():
 
     except Exception as e:
         print(f"ERROR: {e}")
-
-if __name__ == "__main__":
-    sync_files()

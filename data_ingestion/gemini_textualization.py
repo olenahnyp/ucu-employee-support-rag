@@ -133,6 +133,3 @@ def run_textualization_pipeline():
 
     sheet.clear()
     sheet.update([df.columns.values.tolist()] + df.values.tolist())
-
-if __name__ == "__main__":
-    run_textualization_pipeline()

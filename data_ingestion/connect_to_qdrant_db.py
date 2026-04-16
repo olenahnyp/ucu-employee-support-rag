@@ -134,6 +134,3 @@ def sync_vectors_with_sheets():
     df = df[~((df['status'] == 'Deleted') & (df['vector_db_sync'] == 'Yes'))]
     sheet.clear()
     sheet.update([df.columns.values.tolist()] + df.values.tolist())
-
-if __name__ == "__main__":
-    sync_vectors_with_sheets()
