@@ -23,7 +23,7 @@ LLM_CLIENT = OpenAI(
 
 OPENROUTER_MODEL = "google/gemini-3-flash-preview"
 
-with open("final_golden_dataset.json", "r", encoding="utf-8") as f:
+with open("final_golden_dataset copy.json", "r", encoding="utf-8") as f:
     golden_data = json.load(f)
 
 def is_similar(text1, text2, threshold=80):
@@ -87,14 +87,8 @@ def get_metrics(model, collection, e5=False, openai_client=None):
             query=model.encode(item['input']).tolist()
         results = CLIENT.query_points(
             collection_name=collection,
-            prefetch=[
-                models.Prefetch(
-                    query=query,
-                    using="default",
-                    limit=20
-                )
-            ],
-            query=models.FusionQuery(fusion=models.Fusion.RRF),
+            query=query,
+            using="default",
             limit=20
         )
         found_texts = [res.payload['text'] for res in results.points]
@@ -117,7 +111,7 @@ def get_metrics(model, collection, e5=False, openai_client=None):
     return total_hit, total_mrr, total_recall, total_ndcg, \
             total_hit_reranked, total_mrr_reranked, total_recall_reranked, total_ndcg_reranked
 
-def generate_hypothetical_answer(query, gemini_model):
+def generate_hypothetical_answer(query):
     prompt = f"""
     Ти — асистент адміністрації Українського Католицького Університету (УКУ).
     Згенеруй короткий фрагмент тексту, який міг би бути частиною офіційного документа або політики УКУ та містити відповідь на запит користувача.
@@ -127,7 +121,7 @@ def generate_hypothetical_answer(query, gemini_model):
     Запитання: {query}
     """
     response = LLM_CLIENT.chat.completions.create(
-        model=gemini_model,
+        model=OPENROUTER_MODEL,
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": query}
@@ -148,10 +142,10 @@ def get_metrics_hyde(model, collection, e5=False, openai_client=None, sparse_mod
     total_ndcg_reranked = 0
 
     for item in golden_data:
-        hyde_doc = generate_hypothetical_answer(item['input'], OPENROUTER_MODEL)
+        hyde_doc = generate_hypothetical_answer(item['input'])
         if openai_client:
             response = openai_client.embeddings.create(
-                input=[item['input'].replace("\n", " ")],
+                input=[hyde_doc.replace("\n", " ")],
                 model="text-embedding-3-large"
             )
             query_vector = response.data[0].embedding
@@ -161,107 +155,7 @@ def get_metrics_hyde(model, collection, e5=False, openai_client=None, sparse_mod
             query_vector = model.encode(hyde_doc).tolist()
 
         if sparse_model:
-            results = CLIENT.query_points(
-                collection_name=collection,
-                prefetch=[
-                    models.Prefetch(
-                        query=query_vector,
-                        using="default",
-                        limit=20
-                    )
-                ],
-                query=models.FusionQuery(fusion=models.Fusion.RRF),
-                limit=20
-            ) 
-        else:
-            results = CLIENT.query_points(
-                collection_name=collection,
-                prefetch=[
-                    models.Prefetch(
-                        query=query_vector,
-                        using="default",
-                        limit=20
-                    )
-                ],
-                query=models.FusionQuery(fusion=models.Fusion.RRF),
-                limit=20
-            )
-        found_texts = [res.payload['text'] for res in results.points]
-        
-        h, m, r, n = evaluate_retrieval_metrics(found_texts, item['retrieval_context'])
-        total_hit += h
-        total_mrr += m
-        total_recall += r
-        total_ndcg += n
-
-        reranked_objects = get_reranked_results(item['input'], results)
-        reranked_texts = [res.payload['text'] for res in reranked_objects]
-
-        h_rerank, m_rerank, r_rerank, n_rerank = evaluate_retrieval_metrics(reranked_texts, item['retrieval_context'])
-        total_hit_reranked += h_rerank
-        total_mrr_reranked += m_rerank
-        total_recall_reranked += r_rerank
-        total_ndcg_reranked += n_rerank
-
-    return total_hit, total_mrr, total_recall, total_ndcg, \
-            total_hit_reranked, total_mrr_reranked, total_recall_reranked, total_ndcg_reranked
-
-def transform_query(query, gemini_model):
-    prompt = f"""
-    Ти — експерт з документообігу та адміністративних процесів Українського Католицького Університету (УКУ).
-
-    Твоє завдання — переформулювати запит користувача у чітке, формальне та структуроване питання, оптимізоване для пошуку в інституційній базі знань.
-
-    Вимоги:
-    - Збережи початковий зміст запиту без змін.
-    - Не додавай нової інформації та не вигадуй фактів.
-    - Сфокусуйся на ключових термінах, які можуть використовуватися в офіційних документах (наприклад: політика, регламент, процедура, наказ, положення).
-    - Замінюй розмовні формулювання на формальні.
-    - Якщо запит уже є чітким і формальним — залиш його без змін.
-
-    Формат відповіді:
-    - Одне переформульоване питання.
-    - Без пояснень, без додаткового тексту.
-
-    Запит користувача: {query}
-    """
-    print("hello")
-    response = LLM_CLIENT.chat.completions.create(
-        model=gemini_model,
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": query}
-            ],
-            temperature=0.1
-    )
-    return response.choices[0].message.content
-
-def get_metrics_query_transform(model, collection, e5=False, openai_client=None, sparse_model=None):
-    total_hit = 0
-    total_mrr = 0
-    total_recall = 0
-    total_ndcg = 0
-
-    total_hit_reranked = 0
-    total_mrr_reranked = 0
-    total_recall_reranked = 0
-    total_ndcg_reranked = 0
-
-    for item in golden_data:
-        query_formal = transform_query(item['input'], OPENROUTER_MODEL)
-        if openai_client:
-            response = openai_client.embeddings.create(
-                input=[item['input'].replace("\n", " ")],
-                model="text-embedding-3-large"
-            )
-            query_vector = response.data[0].embedding
-        elif e5:
-            query_vector = model.encode("query: " + query_formal).tolist()
-        else:
-            query_vector = model.encode(query_formal).tolist()
-
-        if sparse_model:
-            sparse_emb = list(sparse_model.embed([item['input']]))[0]
+            sparse_emb = list(sparse_model.embed([hyde_doc]))[0]
             results = CLIENT.query_points(
                 collection_name=collection,
                 prefetch=[
@@ -285,14 +179,8 @@ def get_metrics_query_transform(model, collection, e5=False, openai_client=None,
         else:
             results = CLIENT.query_points(
                 collection_name=collection,
-                prefetch=[
-                    models.Prefetch(
-                        query=query_vector,
-                        using="default",
-                        limit=20
-                    )
-                ],
-                query=models.FusionQuery(fusion=models.Fusion.RRF),
+                query=query_vector,
+                using="default",
                 limit=20
             )
         found_texts = [res.payload['text'] for res in results.points]
@@ -303,7 +191,109 @@ def get_metrics_query_transform(model, collection, e5=False, openai_client=None,
         total_recall += r
         total_ndcg += n
 
-        reranked_objects = get_reranked_results(item['input'], results)
+        reranked_objects = get_reranked_results(hyde_doc, results)
+        reranked_texts = [res.payload['text'] for res in reranked_objects]
+
+        h_rerank, m_rerank, r_rerank, n_rerank = evaluate_retrieval_metrics(reranked_texts, item['retrieval_context'])
+        total_hit_reranked += h_rerank
+        total_mrr_reranked += m_rerank
+        total_recall_reranked += r_rerank
+        total_ndcg_reranked += n_rerank
+
+    return total_hit, total_mrr, total_recall, total_ndcg, \
+            total_hit_reranked, total_mrr_reranked, total_recall_reranked, total_ndcg_reranked
+
+def transform_query(query):
+    prompt = f"""
+    Ти — експерт з документообігу та адміністративних процесів Українського Католицького Університету (УКУ).
+
+    Твоє завдання — переформулювати запит користувача у чітке, формальне та структуроване питання, оптимізоване для пошуку в інституційній базі знань.
+
+    Вимоги:
+    - Збережи початковий зміст запиту без змін.
+    - Не додавай нової інформації та не вигадуй фактів.
+    - Сфокусуйся на ключових термінах, які можуть використовуватися в офіційних документах (наприклад: політика, регламент, процедура, наказ, положення).
+    - Замінюй розмовні формулювання на формальні.
+    - Якщо запит уже є чітким і формальним — залиш його без змін.
+
+    Формат відповіді:
+    - Одне переформульоване питання.
+    - Без пояснень, без додаткового тексту.
+
+    Запит користувача: {query}
+    """
+    response = LLM_CLIENT.chat.completions.create(
+        model=OPENROUTER_MODEL,
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": query}
+            ],
+            temperature=0.1
+    )
+    return response.choices[0].message.content
+
+def get_metrics_query_transform(model, collection, e5=False, openai_client=None, sparse_model=None):
+    total_hit = 0
+    total_mrr = 0
+    total_recall = 0
+    total_ndcg = 0
+
+    total_hit_reranked = 0
+    total_mrr_reranked = 0
+    total_recall_reranked = 0
+    total_ndcg_reranked = 0
+
+    for item in golden_data:
+        query_formal = transform_query(item['input'])
+        if openai_client:
+            response = openai_client.embeddings.create(
+                input=[query_formal.replace("\n", " ")],
+                model="text-embedding-3-large"
+            )
+            query_vector = response.data[0].embedding
+        elif e5:
+            query_vector = model.encode("query: " + query_formal).tolist()
+        else:
+            query_vector = model.encode(query_formal).tolist()
+
+        if sparse_model:
+            sparse_emb = list(sparse_model.embed([query_formal]))[0]
+            results = CLIENT.query_points(
+                collection_name=collection,
+                prefetch=[
+                    models.Prefetch(
+                        query=query_vector,
+                        using="default",
+                        limit=20
+                    ),
+                    models.Prefetch(
+                        query=models.SparseVector(
+                        indices=sparse_emb.indices.tolist(),
+                        values=sparse_emb.values.tolist()
+                    ),
+                        using="text_sparse",
+                        limit=20
+                    ),
+                ],
+                query=models.FusionQuery(fusion=models.Fusion.RRF),
+                limit=20
+            )
+        else:
+            results = CLIENT.query_points(
+                collection_name=collection,
+                query=query_vector,
+                using="default",
+                limit=20
+            )
+        found_texts = [res.payload['text'] for res in results.points]
+        
+        h, m, r, n = evaluate_retrieval_metrics(found_texts, item['retrieval_context'])
+        total_hit += h
+        total_mrr += m
+        total_recall += r
+        total_ndcg += n
+
+        reranked_objects = get_reranked_results(query_formal, results)
         reranked_texts = [res.payload['text'] for res in reranked_objects]
 
         h_rerank, m_rerank, r_rerank, n_rerank = evaluate_retrieval_metrics(reranked_texts, item['retrieval_context'])

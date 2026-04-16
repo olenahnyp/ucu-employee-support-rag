@@ -5,7 +5,7 @@ def get_unique_categories_from_qdrant():
         client = QdrantClient(url="http://qdrant:6333") 
         
         response = client.scroll(
-            collection_name="ucu_documents_e5_base",
+            collection_name="ucu_documents_e5_large",
             with_payload=True,
             with_vectors=False
         )

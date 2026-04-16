@@ -14,9 +14,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
-COLLECTION_NAME = "ucu_documents_e5_base"
+COLLECTION_NAME = "ucu_documents_e5_large"
 
-model = SentenceTransformer('intfloat/multilingual-e5-base')
+model = SentenceTransformer('intfloat/multilingual-e5-large')
 MODEL_SPARSE = SparseTextEmbedding(model_name="Qdrant/bm25")
 
 def get_text_from_postgres(file_id):
@@ -55,7 +55,7 @@ def sync_vectors_with_sheets():
             collection_name=COLLECTION_NAME,
             vectors_config={
                 "default": VectorParams(
-                    size=768,
+                    size=1024,
                     distance=Distance.COSINE
                 )
             },

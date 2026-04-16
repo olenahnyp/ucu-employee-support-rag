@@ -16,6 +16,6 @@ CREATE TABLE IF NOT EXISTS processed_documents (
     google_drive_id TEXT UNIQUE,
     file_name TEXT,
     markdown_content TEXT,
-    category TEXT DEFAULT 'public',
+    category TEXT,
     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
