@@ -155,7 +155,7 @@ def get_metrics_hyde(model, collection, e5=False, openai_client=None, sparse_mod
             query_vector = model.encode(hyde_doc).tolist()
 
         if sparse_model:
-            sparse_emb = list(sparse_model.embed([hyde_doc]))[0]
+            sparse_emb = list(sparse_model.embed([item['input']]))[0]
             results = CLIENT.query_points(
                 collection_name=collection,
                 prefetch=[
@@ -191,7 +191,7 @@ def get_metrics_hyde(model, collection, e5=False, openai_client=None, sparse_mod
         total_recall += r
         total_ndcg += n
 
-        reranked_objects = get_reranked_results(hyde_doc, results)
+        reranked_objects = get_reranked_results(item['input'], results)
         reranked_texts = [res.payload['text'] for res in reranked_objects]
 
         h_rerank, m_rerank, r_rerank, n_rerank = evaluate_retrieval_metrics(reranked_texts, item['retrieval_context'])
@@ -257,7 +257,7 @@ def get_metrics_query_transform(model, collection, e5=False, openai_client=None,
             query_vector = model.encode(query_formal).tolist()
 
         if sparse_model:
-            sparse_emb = list(sparse_model.embed([query_formal]))[0]
+            sparse_emb = list(sparse_model.embed([item['input']]))[0]
             results = CLIENT.query_points(
                 collection_name=collection,
                 prefetch=[
@@ -293,7 +293,7 @@ def get_metrics_query_transform(model, collection, e5=False, openai_client=None,
         total_recall += r
         total_ndcg += n
 
-        reranked_objects = get_reranked_results(query_formal, results)
+        reranked_objects = get_reranked_results(item['input'], results)
         reranked_texts = [res.payload['text'] for res in reranked_objects]
 
         h_rerank, m_rerank, r_rerank, n_rerank = evaluate_retrieval_metrics(reranked_texts, item['retrieval_context'])
