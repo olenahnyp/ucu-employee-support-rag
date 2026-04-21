@@ -1,3 +1,7 @@
+"""
+Backend fucntions built on FastAPI. All these functions are used to communicate with 
+PostreSQL for authorization and RAG pipeline for answering user queries.
+"""
 from fastapi import FastAPI, HTTPException, Query, Depends
 from pydantic import BaseModel
 from app.services import iam_service

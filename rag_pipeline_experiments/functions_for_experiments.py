@@ -1,3 +1,7 @@
+"""
+In this file all functions used in experiments with retriever and generator are saved.
+For each search method there was a separate function for convenience during experimentation.
+"""
 import os
 import json
 import math
@@ -27,9 +31,15 @@ with open("final_golden_dataset.json", "r", encoding="utf-8") as f:
     golden_data = json.load(f)
 
 def is_similar(text1, text2, threshold=80):
+    """
+    This function compares if two texts are similar.
+    """
     return fuzz.partial_ratio(text1.strip(), text2.strip()) >= threshold
 
 def get_reranked_results(query, initial_results, k=5):
+    """
+    Rerank results based on user query.
+    """
     points = initial_results.points
     pairs = [[query, res.payload['text']] for res in points]
     scores = MODEL_RERANKER.predict(pairs)
@@ -38,6 +48,9 @@ def get_reranked_results(query, initial_results, k=5):
     return [res[0] for res in scored_results[:k]]
 
 def evaluate_retrieval_metrics(search_results, golden_context, k=5):
+    """
+    Evaluate retrieval metrics, specifically Hit Rate, MRR, Recall, and NDCG.
+    """
     hit = 0
     reciprocal_rank = 0
     dcg = 0
@@ -64,6 +77,9 @@ def evaluate_retrieval_metrics(search_results, golden_context, k=5):
     return hit, reciprocal_rank, recall, ndcg
 
 def get_metrics(model, collection, e5=False, openai_client=None):
+    """
+    Calculate total metrics before and after retrieval.
+    """
     total_hit = 0
     total_mrr = 0
     total_recall = 0
@@ -112,6 +128,9 @@ def get_metrics(model, collection, e5=False, openai_client=None):
             total_hit_reranked, total_mrr_reranked, total_recall_reranked, total_ndcg_reranked
 
 def generate_hypothetical_answer(query):
+    """
+    Generate hypothetical document for HyDE.
+    """
     prompt = f"""
     Ти — асистент адміністрації Українського Католицького Університету (УКУ).
     Згенеруй короткий фрагмент тексту, який міг би бути частиною офіційного документа або політики УКУ та містити відповідь на запит користувача.
@@ -131,6 +150,9 @@ def generate_hypothetical_answer(query):
     return response.choices[0].message.content
 
 def get_metrics_hyde(model, collection, e5=False, openai_client=None, sparse_model=None):
+    """
+    Calculate retrieval metrics for HyDE.
+    """
     total_hit = 0
     total_mrr = 0
     total_recall = 0
@@ -204,6 +226,9 @@ def get_metrics_hyde(model, collection, e5=False, openai_client=None, sparse_mod
             total_hit_reranked, total_mrr_reranked, total_recall_reranked, total_ndcg_reranked
 
 def transform_query(query):
+    """
+    Transform query into a formal form.
+    """
     prompt = f"""
     Ти — експерт з документообігу та адміністративних процесів Українського Католицького Університету (УКУ).
 
@@ -233,6 +258,9 @@ def transform_query(query):
     return response.choices[0].message.content
 
 def get_metrics_query_transform(model, collection, e5=False, openai_client=None, sparse_model=None):
+    """
+    Calculate retrieval metrics for Query Transform.
+    """
     total_hit = 0
     total_mrr = 0
     total_recall = 0
@@ -306,6 +334,9 @@ def get_metrics_query_transform(model, collection, e5=False, openai_client=None,
             total_hit_reranked, total_mrr_reranked, total_recall_reranked, total_ndcg_reranked
 
 def get_metrics_sparse(model, collection, sparse_model, e5=False, openai_client=None):
+    """
+    Calculate retrieval metrics for Hybrid Search (dense + sparse vectors).
+    """
     total_hit = 0
     total_mrr = 0
     total_recall = 0

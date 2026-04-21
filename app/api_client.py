@@ -1,3 +1,7 @@
+"""
+This module is used to send requests from frontend to backend.
+"""
+
 import requests
 
 BACKEND_URL = "http://fastapi_backend:8000"

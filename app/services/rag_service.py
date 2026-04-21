@@ -34,6 +34,9 @@ GEMINI_ANSWER_MODEL = "google/gemini-3-flash-preview"
 RERANKER = CrossEncoder("BAAI/bge-reranker-v2-m3")
 
 def transform_query(query):
+    """
+    Transform query into a formal form.
+    """
     prompt = f"""
     Ти — експерт з документообігу та адміністративних процесів Українського Католицького Університету (УКУ).
 
@@ -187,12 +190,9 @@ def generate_answer_with_guardrails(query: str, retrieved_context: str):
     }
 
 def run_rag_pipeline(query, allowed_categories):
+    """
+    This function is used to run the whole final RAG pipeline.
+    """
     result = search_with_reranker(query, allowed_categories)
     answer = generate_answer_with_guardrails(query, result)
     return f"{answer['answer']}"
-
-# if __name__ == "__main__":
-#     query = input("Введіть ваше запитання: ")
-#     result = search_with_reranker(query)
-#     answer = generate_answer_with_guardrails(query, result)
-#     print(answer["answer"])
