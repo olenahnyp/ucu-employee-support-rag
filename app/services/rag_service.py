@@ -24,7 +24,7 @@ COLLECTION_NAME = "ucu_documents_e5_large"
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-llm_client = OpenAI(
+LLM_CLIENT = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
     timeout=120.0
@@ -33,16 +33,44 @@ GEMINI_ANSWER_MODEL = "google/gemini-3-flash-preview"
 
 RERANKER = CrossEncoder("BAAI/bge-reranker-v2-m3")
 
+def transform_query(query):
+    prompt = f"""
+    Ти — експерт з документообігу та адміністративних процесів Українського Католицького Університету (УКУ).
+
+    Твоє завдання — переформулювати запит користувача у чітке, формальне та структуроване питання, оптимізоване для пошуку в інституційній базі знань.
+
+    Вимоги:
+    - Збережи початковий зміст запиту без змін.
+    - Не додавай нової інформації та не вигадуй фактів.
+    - Сфокусуйся на ключових термінах, які можуть використовуватися в офіційних документах (наприклад: політика, регламент, процедура, наказ, положення).
+    - Замінюй розмовні формулювання на формальні.
+    - Якщо запит уже є чітким і формальним — залиш його без змін.
+
+    Формат відповіді:
+    - Одне переформульоване питання.
+    - Без пояснень, без додаткового тексту.
+
+    Запит користувача: {query}
+    """
+    response = LLM_CLIENT.chat.completions.create(
+        model=GEMINI_ANSWER_MODEL,
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": query}
+            ],
+            temperature=0.1
+    )
+    return response.choices[0].message.content
+
 def search_with_reranker(query: str, allowed_categories=None, initial_k: int = 10, final_k: int = 3):
     """
     Here chunks are retrieved from Qdrant and then reranked.
     """
     print(f"Запит: '{query}'")
     
-    original_query_text = query 
-    
-    query_vector = MODEL.encode("query: " + query)
-    sparse_emb = list(MODEL_SPARSE.embed([query]))[0]
+    original_query_text = query
+    query_formal = transform_query(original_query_text) 
+    query_vector = MODEL.encode("query: " + query_formal)
 
     query_filter = models.Filter(
         must_not=[models.HasIdCondition(has_id=[])]
@@ -62,23 +90,9 @@ def search_with_reranker(query: str, allowed_categories=None, initial_k: int = 1
 
     search_results = client.query_points(
         collection_name=COLLECTION_NAME,
-        prefetch=[
-            models.Prefetch(
-                query=query_vector,
-                using="default",
-                filter=query_filter,
-                limit=initial_k
-            ),
-            models.Prefetch(
-                query=models.SparseVector(
-                indices=sparse_emb.indices.tolist(),
-                values=sparse_emb.values.tolist()),
-                filter=query_filter,
-                using="text_sparse",
-                limit=initial_k
-            ),
-        ],
-        query=models.FusionQuery(fusion=models.Fusion.RRF),
+        query=query_vector,
+        using="default",
+        query_filter=query_filter,
         limit=initial_k
     )
 
@@ -131,7 +145,7 @@ def generate_final_answer(query: str, retrieved_context: str):
     """
     user_message = f"КОНТЕКСТ З БАЗИ ДАНИХ:\n{retrieved_context}\n\nЗАПИТАННЯ КОРИСТУВАЧА:\n{query}"
 
-    response = llm_client.chat.completions.create(
+    response = LLM_CLIENT.chat.completions.create(
         model=GEMINI_ANSWER_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},

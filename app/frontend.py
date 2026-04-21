@@ -5,49 +5,90 @@ from api_client import login_user_api, get_chat_response_api, get_all_users_api,
 add_new_role_api, delete_role_api, get_unique_roles_api, get_unique_categories_api, \
 get_categories_for_role_api, add_user_api, delete_user_api
 
-if not st.session_state.get("authenticated"):
-    st.subheader("Авторизація")
-    username_input = st.text_input("Логін")
-    password_input = st.text_input("Пароль", type="password")
-    if st.button("Увійти"):
-        role = login_user_api(username_input, password_input)
-        if role:
-            st.session_state.authenticated = True
-            st.session_state.role = role
-            st.rerun()
-        else:
-            st.error("Неправильний логін або пароль")
-    st.stop()
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
+local_css("app/style.css")
+
+if not st.session_state.get("authenticated"):
+    col1, col2, col3 = st.columns([1, 3, 1])
+
+    with col2:
+        sub_col1, sub_col2, sub_col3 = st.columns([2, 1, 2])
+        with sub_col2:
+            st.image("app/images/ucu_logo.png", use_container_width=True)
+        
+        st.markdown("<h1 class='centered-title'>Вхід до системи</h1>", unsafe_allow_html=True)
+       
+        with st.container(border=True):
+            username_input = st.text_input("Логін", placeholder="Введіть ваш логін")
+            password_input = st.text_input("Пароль", type="password", placeholder="Введіть ваш пароль")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            login_button = st.button("Увійти", use_container_width=True)
+            
+            if login_button:
+                role = login_user_api(username_input, password_input)
+                if role:
+                    st.session_state.authenticated = True
+                    st.session_state.role = role
+                    st.rerun()
+                else:
+                    st.error("Неправильний логін або пароль")
+    st.stop()
 else:
-    if st.session_state.get("role") == "Адмін":
-        with st.sidebar:
-            menu = option_menu(
-                menu_title="Навігація", 
-                options=["Чат підтримки", "Адмін-панель"],
-                icons=["chat-dots", "gear"], 
-                default_index=0,
-            )
-    else:
-        with st.sidebar:
-            menu = option_menu(
-                menu_title="Навігація", 
-                options=["Чат підтримки"],
-                icons=["chat-dots", "gear"],
-                menu_icon="cast", 
-                default_index=0,
-            )
-    if st.sidebar.button("Вийти"):
-        st.session_state.clear()
-        st.rerun()
+    with st.sidebar:
+        col_side1, col_side2, col_side3 = st.columns([1, 3, 1])
+        
+        with col_side2:
+            st.image("app/images/ucu_logo.png", use_container_width=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        menu = option_menu(
+            menu_title="Навігація", 
+            menu_icon="none",
+            options=["Чат підтримки", "Адмін-панель"] if st.session_state.get("role") == "Адмін" else ["Чат підтримки"],
+            icons=["chat-dots", "gear"],  
+            default_index=0,
+            styles={
+                "container": {"padding": "5!important", "background-color": "#fafafa", "border-radius": "10px"},
+                "menu-title": {"font-size": "16px", "text-transform": "uppercase", "font-weight": "bold", "color": "#888"},
+                "menu-icon": {"display": "none"},
+                "icon": {"color": "#444", "font-size": "16px"}, 
+                "nav-link": {
+                    "font-size": "16px", 
+                    "text-align": "left", 
+                    "margin": "5px", 
+                    "--hover-color": "#eee",
+                    "border-radius": "8px",
+                    "display": "flex",
+                    "align-items": "center"
+                },
+                "nav-link-selected": {
+                    "background-color": "#f0dddd",
+                    "color": "black !important",
+                    "font-weight": "normal",
+                }
+            }
+        )
+        st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+        st.markdown("---")
+        if st.button("Вийти", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
     if menu == "Чат підтримки":
-        st.title("UCU Employee Support System 🎓")
+        st.title("Чат підтримки працівників УКУ")
+        st.markdown("---")
         if "messages" not in st.session_state:
             st.session_state.messages = []
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
         if prompt := st.chat_input("Яке у вас питання?"):
+            st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
             with st.chat_message("assistant"):

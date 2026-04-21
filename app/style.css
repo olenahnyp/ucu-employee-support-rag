@@ -1,0 +1,57 @@
+.stForm, div[data-testid="stVerticalBlock"] > div[style*="border"] {
+    min-width: 550px;
+    padding: 30px;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+[data-testid="column"] {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.stButton>button {
+    border-radius: 8px;
+    background-color: #7e1716;
+    color: white;
+    font-weight: bold;
+    border: none;
+    transition: all 0.3s ease-in-out; 
+}
+
+.stButton>button:hover {
+    background-color: #f0dddd;
+    color: #1a1a1a !important;
+    border: 1px solid #1a1a1a;
+    cursor: pointer;
+}
+
+[data-testid="stChatMessageAvatarUser"] {
+    background-color: #f0dddd !important;
+    color: white !important;
+}
+
+[data-testid="stChatMessageAvatarAssistant"] {
+    background-color: #7e1716 !important;
+    color: white !important;
+}
+
+[data-testid="stSidebarUserContent"] {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.spacer {
+    flex-grow: 1;
+}
+
+.centered-title {
+    text-align: center;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
