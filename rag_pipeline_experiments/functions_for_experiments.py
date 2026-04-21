@@ -23,7 +23,7 @@ LLM_CLIENT = OpenAI(
 
 OPENROUTER_MODEL = "google/gemini-3-flash-preview"
 
-with open("final_golden_dataset copy.json", "r", encoding="utf-8") as f:
+with open("final_golden_dataset.json", "r", encoding="utf-8") as f:
     golden_data = json.load(f)
 
 def is_similar(text1, text2, threshold=80):
