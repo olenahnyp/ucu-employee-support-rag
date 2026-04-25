@@ -46,7 +46,7 @@ def add_new_user(username, password, role):
     cur = conn.cursor()
     hashed_pw = generate_password_hash(password)
     cur.execute(
-        "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
+        "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
         (username, hashed_pw, role)
     )
     conn.commit()
