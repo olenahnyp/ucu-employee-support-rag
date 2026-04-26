@@ -15,13 +15,13 @@ The project is organized to separate production code from research and experimen
 ```text
 ├── app                        # Streamlit frontend and FastAPI backend logic     
 ├── data_ingestion             # Pipeline for processing and indexing data      
-├── db_init                    # Initial tables for PostreSQL for texts, users, and roles
+├── db_init                    # Initial tables for PostgreSQL for texts, users, and roles
 ├── rag_pipeline_experiments   # Retrieval and generation RAG evaluation
 ├── textualization_methods     # Textualization experiments and evaluation
 ├── .gitignore                 # Files that are used locally but not pushed to Git      
 ├── Dockerfile                 # Docker image configuration 
-├── README.mb                  # Docker image configuration
-├── docker-compose.yml         # Orchestration of Streamlit, FastAPI, Qdrant, and PostreSQL
+├── README.md                  # Project description and setup instructions
+├── docker-compose.yml         # Orchestration of Streamlit, FastAPI, Qdrant, and PostgreSQL
 └── requirements.txt           # Python dependencies
 ```     
 
