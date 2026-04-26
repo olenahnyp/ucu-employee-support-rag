@@ -13,7 +13,8 @@ An intelligent support assistant for Ukrainian Catholic University (UCU) employe
 The project is organized to separate production code from research and experimental data:
 
 ```text
-├── app                        # Streamlit frontend and FastAPI backend logic     
+├── app                        # Streamlit frontend and FastAPI backend logic
+├── assets                     # Media files for documentation (GIF demo)
 ├── data_ingestion             # Pipeline for processing and indexing data      
 ├── db_init                    # Initial tables for PostgreSQL for texts, users, and roles
 ├── rag_pipeline_experiments   # Retrieval and generation RAG evaluation
