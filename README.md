@@ -39,7 +39,7 @@ The project is organized to separate production code from research and experimen
 
 ### STEP 1: Clone Git repository using the following command.
 ```bash
-git clone
+git clone https://github.com/olenahnyp/ucu-employee-support-rag.git
 cd ucu-employee-support-rag
 ```
 
@@ -57,4 +57,8 @@ To use the system, you must:
 2. Set up your own Google Cloud credentials (service account or OAuth).
 3. Run the ingestion pipeline to populate your local Qdrant instance.
 
-![Project Demo](assets/demo.gif)
+## Project Demo
+
+<p align="center">
+  <img src="assets/demo.gif" width="100%" style="border-radius: 10px;">
+</p>
