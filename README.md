@@ -22,7 +22,8 @@ The project is organized to separate production code from research and experimen
 ├── Dockerfile                 # Docker image configuration 
 ├── README.mb                  # Docker image configuration
 ├── docker-compose.yml         # Orchestration of Streamlit, FastAPI, Qdrant, and PostreSQL
-└── requirements.txt           # Python dependencies     
+└── requirements.txt           # Python dependencies
+```     
 
 ## Tech Stack
 
@@ -33,7 +34,6 @@ The project is organized to separate production code from research and experimen
 - Frontend: Streamlit
 - Backend: FastAPI
 - DevOps: Docker & Docker Compose
-```
 
 ## Setup
 
@@ -50,9 +50,11 @@ cd ucu-employee-support-rag
 docker-compose up --build
 ```
 
-[!IMPORTANT]
-**Data Availability:** The repository does not include pre-indexed data or access to the original Google Drive source for privacy reasons. 
+Note:
+The repository does not include pre-indexed data or access to the original Google Drive source for privacy reasons. 
 To use the system, you must:
 1. Create your own Google Drive folder with documents.
 2. Set up your own Google Cloud credentials (service account or OAuth).
 3. Run the ingestion pipeline to populate your local Qdrant instance.
+
+![Project Demo](assets/demo.gif)
