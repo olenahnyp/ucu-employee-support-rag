@@ -33,6 +33,7 @@ The project is organized to separate production code from research and experimen
 - Frontend: Streamlit
 - Backend: FastAPI
 - DevOps: Docker & Docker Compose
+```
 
 ## Setup
 
@@ -40,12 +41,14 @@ The project is organized to separate production code from research and experimen
 ```bash
 git clone
 cd ucu-employee-support-rag
+```
 
 ### STEP 2: Create .env file in the root directory and include all your API keys there.
 
 ### STEP 3: Run with Docker.
 ```bash
 docker-compose up --build
+```
 
 [!IMPORTANT]
 **Data Availability:** The repository does not include pre-indexed data or access to the original Google Drive source for privacy reasons. 
